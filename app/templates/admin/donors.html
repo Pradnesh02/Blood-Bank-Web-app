@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Donor Registry{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-white/10 pb-5 gap-4">
+        <div>
+            <h1 class="text-headline-lg font-headline-lg text-white">Donor Registry</h1>
+            <p class="text-body-md font-body-md text-gray-400 mt-1">Manage registered donors, analyze eligibility metrics, and perform live searches.</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <!-- Add Donor Button -->
+            <a href="{{ url_for('donors.add') }}" 
+               class="bg-primary btn-shimmer text-white rounded-xl px-6 py-3 font-label-bold text-label-bold hover-lift shadow-[0_0_20px_rgba(255,23,68,0.3)] inline-flex items-center gap-2 transition-all">
+                <span class="material-symbols-outlined">add</span>
+                ADD NEW DONOR
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter Panel (Glassmorphic) -->
+    <div class="glass-panel border-white/10 p-6 rounded-3xl space-y-5 relative overflow-hidden">
+        <div class="glass-highlight"></div>
+        
+        <!-- Search Input with Neumorphic Inset -->
+        <div class="relative w-full">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500">
+                <span class="material-symbols-outlined text-lg">search</span>
+            </span>
+            <input type="text" id="donor-search" onkeyup="filterDonorsTable()" placeholder="Search by name, phone, or city..."
+                class="w-full pl-11 pr-4 py-3 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-transparent">
+        </div>
+
+        <!-- Blood Group Filter Chips -->
+        <div class="space-y-2.5">
+            <span class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest block">Filter by Blood Group</span>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="filterGroup('All')" id="chip-All" 
+                    class="rounded-xl px-4 py-2 font-label-bold text-label-bold transition-all hover:scale-105 group-chip-btn bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner">
+                    All Groups
+                </button>
+                {% for bg in ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] %}
+                    <button onclick="filterGroup('{{ bg }}')" id="chip-{{ bg }}" 
+                        class="rounded-xl px-4 py-2 font-label-bold text-label-bold transition-all hover:scale-105 group-chip-btn glassmorphic-layer text-gray-400 hover:text-white border border-white/5">
+                        {{ bg }}
+                    </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Donors Table (Neumorphic Base Wrapper) -->
+    <div class="neu-base rounded-2xl overflow-hidden border border-white/5 relative">
+        <div class="glass-highlight"></div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm" id="donors-table">
+                <thead>
+                    <tr class="bg-white/5 text-gray-400 font-label-bold text-label-bold uppercase tracking-wider">
+                        <th class="p-4">Name</th>
+                        <th class="p-4 text-center">Age</th>
+                        <th class="p-4 text-center">Blood Group</th>
+                        <th class="p-4">Phone</th>
+                        <th class="p-4">Last Donation</th>
+                        <th class="p-4">Eligibility (ML)</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% if donors %}
+                        {% for d in donors %}
+                            {% set elig = donor_eligibility[d.id] %}
+                            <tr class="hover:bg-white/5 border-t border-white/5 transition-colors donor-row" data-blood-group="{{ d.blood_group }}">
+                                <td class="p-4">
+                                    <p class="font-bold text-white">{{ d.name }}</p>
+                                    <p class="text-xs text-gray-500 font-medium mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">location_on</span>
+                                        {{ d.address or 'Address not set' }}
+                                    </p>
+                                </td>
+                                <td class="p-4 text-center font-bold text-gray-300">{{ d.age }}</td>
+                                <td class="p-4 text-center">
+                                    <span class="bg-primary/20 text-primary font-bold px-3 py-1 rounded-full text-sm">
+                                        {{ d.blood_group }}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-gray-300 font-semibold">{{ d.phone }}</td>
+                                <td class="p-4 text-gray-400 font-medium text-xs">
+                                    {{ d.last_donation_date.strftime('%d %b %Y') }}
+                                </td>
+                                <td class="p-4">
+                                    {% if elig.eligible %}
+                                        <span class="inline-flex items-center gap-1.5 bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                            <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                                            Likely Eligible ({{ (elig.confidence * 100)|int }}%)
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-bold shadow-sm" title="{{ elig.reason }}">
+                                            <span class="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>
+                                            Not Eligible ({{ (elig.confidence * 100)|int }}%)
+                                        </span>
+                                        <p class="text-[10px] text-error/85 font-medium mt-1 max-w-xs leading-normal">{{ elig.reason }}</p>
+                                    {% endif %}
+                                </td>
+                                <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                                    <a href="{{ url_for('donors.edit', id=d.id) }}" class="glassmorphic-layer text-white rounded-lg px-3 py-1 text-sm hover-lift inline-block border border-white/10">
+                                        Edit
+                                    </a>
+                                    <form action="{{ url_for('donors.delete', id=d.id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete donor {{ d.name }}?');">
+                                        <button type="submit" class="bg-error/20 text-error rounded-lg px-3 py-1 text-sm hover:bg-error/30 transition-all border border-error/30">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="p-8 text-center text-gray-500 font-bold">
+                                No donors registered in the database.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let activeGroupFilter = 'All';
+
+    function filterGroup(group) {
+        activeGroupFilter = group;
+        
+        const chips = document.querySelectorAll(".group-chip-btn");
+        chips.forEach(chip => {
+            if (chip.id === `chip-${group}`) {
+                chip.className = "rounded-xl px-4 py-2 font-label-bold text-label-bold transition-all hover:scale-105 group-chip-btn bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner";
+            } else {
+                chip.className = "rounded-xl px-4 py-2 font-label-bold text-label-bold transition-all hover:scale-105 group-chip-btn glassmorphic-layer text-gray-400 hover:text-white border border-white/5";
+            }
+        });
+        
+        filterDonorsTable();
+    }
+
+    function filterDonorsTable() {
+        const searchInput = document.getElementById("donor-search").value.toLowerCase();
+        const rows = document.querySelectorAll(".donor-row");
+        
+        rows.forEach(row => {
+            const bloodGroup = row.getAttribute("data-blood-group");
+            const name = row.children[0].innerText.toLowerCase();
+            const phone = row.children[3].innerText.toLowerCase();
+            
+            const matchesSearch = name.includes(searchInput) || phone.includes(searchInput);
+            const matchesGroup = (activeGroupFilter === 'All') || (bloodGroup === activeGroupFilter);
+            
+            if (matchesSearch && matchesGroup) {
+                row.classList.remove("hidden");
+            } else {
+                row.classList.add("hidden");
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Stock Inventory{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="border-b border-white/10 pb-5">
+        <h1 class="text-headline-lg font-headline-lg text-white">Blood Inventory</h1>
+        <p class="text-body-md font-body-md text-gray-400 mt-1">Manage physical stocks, perform manual adjustments, and review holdings comparisons.</p>
+    </div>
+
+    <!-- 8 Blood Group Cards: grid grid-cols-2 md:grid-cols-4 gap-gutter -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {% for stock in stock_levels %}
+            <div class="neu-base rounded-2xl p-6 hover-lift relative overflow-hidden flex flex-col items-center text-center border border-white/5 space-y-3">
+                <div class="glass-highlight"></div>
+                
+                <!-- Blood Group Symbol -->
+                <span class="font-display-lg text-display-lg text-primary font-bold leading-none">{{ stock.blood_group }}</span>
+                
+                <!-- Units Count -->
+                <div class="space-y-1">
+                    <span class="font-headline-lg text-headline-lg text-white leading-none block">{{ stock.units }}</span>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Units available</span>
+                </div>
+
+                <!-- Status Badge (Dynamic Colors based on units count) -->
+                <span class="text-[9px] font-label-bold text-label-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border
+                    {% if stock.units >= 10 %}bg-green-500/20 text-green-400 border-green-500/30
+                    {% elif stock.units >= 5 %}bg-yellow-500/20 text-yellow-400 border-yellow-500/30
+                    {% else %}bg-error/20 text-error border-error/30 animate-pulse{% endif %}">
+                    {% if stock.units >= 10 %}Sufficient{% elif stock.units >= 5 %}Low{% else %}Critical{% endif %}
+                </span>
+
+                <!-- Smart Alert Message (Generated dynamically in template to match specs without route modifications) -->
+                <p class="font-body-md text-body-md text-gray-400 mt-2 text-xs leading-normal min-h-[32px] line-clamp-2">
+                    {% if stock.units >= 10 %}
+                        Stock is optimal. No active shortages.
+                    {% elif stock.units >= 5 %}
+                        Stock is low. Monitor demand closely.
+                    {% else %}
+                        Critical shortage! Immediate replenishment required.
+                    {% endif %}
+                </p>
+
+                <!-- Update Button -->
+                <button onclick="openUpdateModal('{{ stock.blood_group }}', {{ stock.units }})" 
+                    class="glassmorphic-layer text-white rounded-xl px-4 py-2 mt-4 font-label-bold text-label-bold hover-lift border border-white/10 active:scale-95 transition-all w-full">
+                    Update
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Stock History Chart -->
+    <div class="neu-base rounded-3xl p-8 border border-white/5 space-y-4 relative overflow-hidden">
+        <div class="glass-highlight"></div>
+        <div>
+            <h2 class="text-headline-md font-headline-md text-white">Holdings Comparison</h2>
+            <p class="text-xs text-gray-400">Plotly side-by-side analysis of available inventory units.</p>
+        </div>
+        <!-- Plotly Target Container inside a neumorphic-inset -->
+        <div class="neumorphic-inset rounded-2xl p-4">
+            <div id="stock-plotly-chart" class="w-full h-80"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Adjust Stock Units -->
+<div id="adjust-stock-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+    <div class="glass-panel w-full max-w-md rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+        <!-- Header -->
+        <div class="bg-[#1e1e1e] border-b border-white/10 px-6 py-4.5 flex justify-between items-center text-white">
+            <h3 class="text-lg font-bold">Adjust Blood Stock</h3>
+            <button onclick="closeUpdateModal()" class="text-gray-400 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <!-- Form -->
+        <form action="{{ url_for('stock.update') }}" method="POST" class="p-6 space-y-4">
+            <div class="space-y-1">
+                <label class="font-label-bold text-label-bold text-gray-400 uppercase block tracking-wider">Blood Group</label>
+                <input type="text" id="modal-blood-group" name="blood_group" readonly
+                    class="w-full px-4 py-3 neumorphic-inset rounded-xl bg-transparent text-gray-400 font-bold outline-none text-xs cursor-not-allowed border-none">
+            </div>
+            
+            <div class="space-y-1">
+                <label for="modal-units" class="font-label-bold text-label-bold text-gray-400 uppercase block tracking-wider">Units (350ml each)</label>
+                <input type="number" id="modal-units" name="units" required min="0" placeholder="0"
+                    class="w-full px-4 py-3.5 neumorphic-inset rounded-xl outline-none transition-all text-sm font-semibold text-white bg-transparent border-none focus:ring-2 focus:ring-primary/50">
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-3">
+                <button type="button" onclick="closeUpdateModal()" class="bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-2 px-5 rounded-lg text-xs transition-colors border border-white/5">
+                    Cancel
+                </button>
+                <button type="submit" class="bg-primary hover:bg-red-500 text-white font-bold py-2 px-5 rounded-lg shadow-md text-xs transition-colors active:scale-95">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderPlotlyStockChart();
+    });
+
+    function renderPlotlyStockChart() {
+        fetch("/stock/api/levels")
+            .then(res => res.json())
+            .then(data => {
+                const xValues = Object.keys(data);
+                const yValues = Object.values(data);
+                
+                // Color mapping matching warn states
+                const colors = yValues.map(val => {
+                    if (val < 5) return '#FF1744'; // Red
+                    if (val < 10) return '#dd6b20'; // Orange
+                    return '#388e3c'; // Green
+                });
+
+                const trace = {
+                    x: xValues,
+                    y: yValues,
+                    type: 'bar',
+                    marker: {
+                        color: colors,
+                        line: {
+                            color: '#121212',
+                            width: 1.5
+                        }
+                    },
+                    text: yValues.map(String),
+                    textposition: 'auto',
+                    hoverinfo: 'x+y',
+                    textfont: {
+                        family: 'Manrope',
+                        color: '#ffffff'
+                    }
+                };
+
+                const layout = {
+                    margin: { t: 20, b: 40, l: 45, r: 15 },
+                    xaxis: {
+                        title: 'Blood Group',
+                        titlefont: { size: 11, color: '#a3a3a3', font: { weight: 'bold', family: 'Manrope' } },
+                        gridcolor: 'rgba(255, 255, 255, 0.05)',
+                        linecolor: 'rgba(255, 255, 255, 0.1)',
+                        tickfont: { color: '#ffffff', family: 'Manrope' }
+                    },
+                    yaxis: {
+                        title: 'Units In Stock',
+                        titlefont: { size: 11, color: '#a3a3a3', font: { weight: 'bold', family: 'Manrope' } },
+                        gridcolor: 'rgba(255, 255, 255, 0.05)',
+                        linecolor: 'rgba(255, 255, 255, 0.1)',
+                        zerolinecolor: 'rgba(255, 255, 255, 0.1)',
+                        tickfont: { color: '#ffffff', family: 'Manrope' }
+                    },
+                    plot_bgcolor: 'transparent',
+                    paper_bgcolor: 'transparent'
+                };
+
+                Plotly.newPlot('stock-plotly-chart', [trace], layout, {responsive: true, displayModeBar: false});
+            })
+            .catch(err => console.error("Plotly load failed:", err));
+    }
+
+    function openUpdateModal(group, currentUnits) {
+        document.getElementById("modal-blood-group").value = group;
+        document.getElementById("modal-units").value = currentUnits;
+        document.getElementById("adjust-stock-modal").classList.remove("hidden");
+    }
+
+    function closeUpdateModal() {
+        document.getElementById("adjust-stock-modal").classList.add("hidden");
+    }
+</script>
+{% endblock %}

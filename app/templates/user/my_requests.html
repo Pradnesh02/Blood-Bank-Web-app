@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - My Requests{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-white/10 pb-5 gap-4">
+        <div>
+            <h1 class="text-headline-lg font-headline-lg text-white">Your Requests History</h1>
+            <p class="text-body-md font-body-md text-gray-400 mt-1">Review processing workflows, timestamps, and responses.</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <!-- Submit New Request Button -->
+            <a href="{{ url_for('user.request_blood') }}" 
+               class="bg-primary btn-shimmer text-white font-label-bold text-label-bold px-6 py-3 rounded-xl hover-lift shadow-[0_0_20px_rgba(255,23,68,0.3)] inline-flex items-center gap-2 transition-all">
+                <span class="material-symbols-outlined">add</span>
+                SUBMIT NEW REQUEST
+            </a>
+        </div>
+    </div>
+
+    <!-- Requests list -->
+    <div class="space-y-4">
+        {% if requests %}
+            {% for req in requests %}
+                <div class="neu-base rounded-2xl p-6 hover-lift relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all duration-300 border
+                    {% if req.status == 'Approved' %}border-green-500/30 bg-green-500/5
+                    {% elif req.status == 'Rejected' %}border-error/30 bg-error/5
+                    {% else %}border-white/5 bg-transparent{% endif %}">
+                    <div class="glass-highlight"></div>
+                    
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+                            <!-- Blood Group Badge -->
+                            <span class="bg-primary/20 text-primary font-bold px-3 py-1 rounded-full text-xs">
+                                {{ req.blood_group }}
+                            </span>
+                            <!-- Quantity Badge -->
+                            <span class="glassmorphic-layer text-white px-3 py-1 rounded-lg text-sm border border-white/5 font-semibold">
+                                {{ req.quantity }} Units
+                            </span>
+                            <!-- Urgency -->
+                            <span class="px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase tracking-widest border
+                                {% if req.urgency == 'Emergency' %}bg-error/20 text-error border-error/30 animate-pulse
+                                {% elif req.urgency == 'Urgent' %}bg-orange-500/20 text-orange-400 border-orange-500/30
+                                {% else %}bg-green-500/20 text-green-400 border-green-500/30{% endif %}">
+                                {{ req.urgency }}
+                            </span>
+                            <span class="text-xs text-gray-500 font-bold ml-1.5 flex items-center gap-1"><span class="material-symbols-outlined text-xs">history</span> {{ req.created_at.strftime('%d %b %Y %H:%M') }}</span>
+                        </div>
+                        
+                        <div class="text-xs text-gray-400 space-y-1 font-semibold">
+                            <p class="flex items-center gap-1.5"><span class="material-symbols-outlined text-xs text-gray-500">local_hospital</span> Hospital: <span class="text-gray-200">{{ req.hospital_name }}</span></p>
+                            <p class="flex items-center gap-1.5"><span class="material-symbols-outlined text-xs text-gray-500">calendar_today</span> Required by: <span class="text-gray-200">{{ req.required_date.strftime('%d %B %Y') }}</span></p>
+                            {% if req.notes %}
+                                <p class="text-gray-500 font-medium italic mt-2 bg-black/10 p-2.5 rounded-xl border border-white/5">"{{ req.notes }}"</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end">
+                        <span class="px-3.5 py-1.5 rounded-full text-xs font-bold shadow-sm border
+                            {% if req.status == 'Approved' %}bg-green-500/20 text-green-400 border-green-500/30
+                            {% elif req.status == 'Rejected' %}bg-error/20 text-error border-error/30
+                            {% else %}bg-orange-500/20 text-orange-400 border-orange-500/30{% endif %}">
+                            {{ req.status }}
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="neu-base rounded-2xl p-12 text-center text-gray-500 font-bold border border-white/5">
+                No request submissions found.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+instance/
+.flask_session
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.DS_Store
+migrations/versions/*.py

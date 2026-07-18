@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Register{% endblock %}
+
+{% block content %}
+<div class="glass-panel rounded-3xl p-10 max-w-md w-full mx-auto mt-20 relative overflow-hidden shadow-2xl">
+    <div class="glass-highlight"></div>
+
+    <!-- Centered Logo and Water Drop -->
+    <div class="flex flex-col items-center gap-2 mb-6">
+        <span class="material-symbols-outlined text-5xl text-primary" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+        <span class="font-headline-lg text-headline-lg font-bold text-white">BloodBank</span>
+    </div>
+
+    <!-- Title -->
+    <h2 class="text-headline-lg font-headline-lg text-white text-center mb-6">Create Account</h2>
+
+    <!-- Form -->
+    <form action="{{ url_for('auth.register') }}" method="POST" class="space-y-4">
+        <!-- Full Name -->
+        <div class="space-y-2">
+            <label for="name" class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">Full Name</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                    <span class="material-symbols-outlined text-lg">person</span>
+                </span>
+                <input type="text" id="name" name="name" required placeholder="John Doe"
+                    class="w-full pl-11 pr-4 py-3.5 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-transparent">
+            </div>
+        </div>
+
+        <!-- Email Address -->
+        <div class="space-y-2">
+            <label for="email" class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">Email Address</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                    <span class="material-symbols-outlined text-lg">mail</span>
+                </span>
+                <input type="email" id="email" name="email" required placeholder="john@example.com"
+                    class="w-full pl-11 pr-4 py-3.5 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-transparent">
+            </div>
+        </div>
+
+        <!-- Phone Number -->
+        <div class="space-y-2">
+            <label for="phone" class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">Phone Number</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                    <span class="material-symbols-outlined text-lg">phone</span>
+                </span>
+                <input type="tel" id="phone" name="phone" required placeholder="555-0199"
+                    class="w-full pl-11 pr-4 py-3.5 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-transparent">
+            </div>
+        </div>
+
+        <!-- Blood Group Dropdown -->
+        <div class="space-y-2">
+            <label for="blood_group" class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">Blood Group</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                    <span class="material-symbols-outlined text-lg text-primary" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+                </span>
+                <select id="blood_group" name="blood_group" required
+                    class="w-full pl-11 pr-4 py-3.5 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-surface">
+                    <option value="" disabled selected class="text-gray-500">Select your blood group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-2">
+            <label for="password" class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">Password</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                    <span class="material-symbols-outlined text-lg">lock</span>
+                </span>
+                <input type="password" id="password" name="password" required placeholder="••••••••"
+                    class="w-full pl-11 pr-4 py-3.5 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-transparent">
+            </div>
+        </div>
+
+        <!-- Register Button -->
+        <button type="submit" class="glass-button-primary btn-shimmer text-white font-label-bold text-label-bold py-3.5 rounded-xl w-full hover:scale-105 active:scale-95 transition-all shadow-lg flex justify-center items-center gap-2 mt-6">
+            REGISTER ACCOUNT
+        </button>
+    </form>
+
+    <!-- Footer link -->
+    <div class="text-center text-xs text-gray-500 border-t border-white/10 pt-4 mt-6">
+        Already have an account? 
+        <a href="{{ url_for('auth.login') }}" class="text-primary hover:underline font-semibold transition-colors">Log in here</a>
+    </div>
+</div>
+{% endblock %}

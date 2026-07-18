@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - User Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-white/10 pb-5 gap-4">
+        <div>
+            <h1 class="text-display-lg font-display-lg text-white leading-none">User Dashboard</h1>
+            <p class="text-body-lg font-body-lg text-gray-400 mt-2">Submit blood requests, track approval states, and review request history.</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <!-- Request Blood Button -->
+            <a href="{{ url_for('user.request_blood') }}" 
+               class="bg-primary btn-shimmer text-white font-label-bold text-label-bold px-6 py-3.5 rounded-xl hover-lift shadow-[0_0_20px_rgba(255,23,68,0.3)] inline-flex items-center gap-2 transition-all">
+                <span class="material-symbols-outlined">handholding_heart</span>
+                REQUEST BLOOD NOW
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <!-- Card 1: Total Requests -->
+        <div class="neu-base rounded-2xl p-6 relative hover-lift h-40 overflow-hidden flex flex-col justify-between border border-white/5">
+            <div class="glass-highlight"></div>
+            <div class="flex justify-between items-start">
+                <p class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest">Total Requests</p>
+                <span class="material-symbols-outlined text-gray-400 text-3xl" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+            </div>
+            <h3 class="text-display-lg font-display-lg text-white leading-none mb-1">{{ total_requests }}</h3>
+        </div>
+
+        <!-- Card 2: Approved Requests -->
+        <div class="neu-base rounded-2xl p-6 relative hover-lift h-40 overflow-hidden flex flex-col justify-between border border-white/5">
+            <div class="glass-highlight"></div>
+            <div class="flex justify-between items-start">
+                <p class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest">Approved Requests</p>
+                <span class="material-symbols-outlined text-green-400 text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+            </div>
+            <h3 class="text-display-lg font-display-lg text-white leading-none mb-1">{{ approved_requests }}</h3>
+        </div>
+
+        <!-- Card 3: Pending Requests -->
+        <div class="neu-base rounded-2xl p-6 relative hover-lift h-40 overflow-hidden flex flex-col justify-between border border-white/5">
+            <div class="glass-highlight"></div>
+            <div class="flex justify-between items-start">
+                <p class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest">Pending Requests</p>
+                <span class="material-symbols-outlined text-orange-400 text-3xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+            </div>
+            <h3 class="text-display-lg font-display-lg text-white leading-none mb-1">{{ pending_requests }}</h3>
+        </div>
+    </div>
+
+    <!-- Recent Activity Table (Neumorphic Base Wrapper) -->
+    <div class="neu-base rounded-3xl p-8 relative overflow-hidden space-y-4 border border-white/5">
+        <div class="glass-highlight"></div>
+        <div>
+            <h2 class="text-headline-md font-headline-md text-white">Your Recent Requests</h2>
+            <p class="text-xs text-gray-400">Track current status and rejection reasons (if any).</p>
+        </div>
+
+        <div class="overflow-x-auto rounded-2xl border border-white/5 bg-black/20">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-white/5 border-b border-white/10 text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest">
+                        <th class="p-4">Required Date</th>
+                        <th class="p-4 text-center">Group</th>
+                        <th class="p-4 text-center">Quantity</th>
+                        <th class="p-4">Hospital</th>
+                        <th class="p-4">Urgency</th>
+                        <th class="p-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% if recent_requests %}
+                        {% for req in recent_requests %}
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 font-bold text-white">{{ req.required_date.strftime('%d %b %Y') }}</td>
+                                <td class="p-4 text-center">
+                                    <span class="bg-primary/20 text-primary font-bold px-3 py-1 rounded-full text-sm">
+                                        {{ req.blood_group }}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-center font-bold text-white">{{ req.quantity }} Units</td>
+                                <td class="p-4 text-gray-300 font-semibold">{{ req.hospital_name }}</td>
+                                <td class="p-4">
+                                    <span class="px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase tracking-widest shadow-sm
+                                        {% if req.urgency == 'Emergency' %}bg-error text-white
+                                        {% elif req.urgency == 'Urgent' %}bg-orange-500 text-white
+                                        {% else %}bg-blue-600 text-white{% endif %}">
+                                        {{ req.urgency }}
+                                    </span>
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold shadow-sm
+                                        {% if req.status == 'Approved' %}bg-green-500/20 text-green-400 border border-green-500/30
+                                        {% elif req.status == 'Rejected' %}bg-error/20 text-error border border-error/30
+                                        {% else %}bg-orange-500/20 text-orange-400 border border-orange-500/30{% endif %}">
+                                        {{ req.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-gray-500 font-bold">
+                                You have not submitted any blood requests yet.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

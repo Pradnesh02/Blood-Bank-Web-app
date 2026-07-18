@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Login{% endblock %}
+
+{% block content %}
+<div class="glass-panel rounded-3xl p-10 max-w-md w-full mx-auto mt-20 relative overflow-hidden shadow-2xl">
+    <div class="glass-highlight"></div>
+
+    <!-- Centered Logo and Water Drop -->
+    <div class="flex flex-col items-center gap-2 mb-6">
+        <span class="material-symbols-outlined text-5xl text-primary" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+        <span class="font-headline-lg text-headline-lg font-bold text-white">BloodBank</span>
+    </div>
+
+    <!-- Title -->
+    <h2 class="text-headline-lg font-headline-lg text-white text-center mb-6">Welcome Back</h2>
+
+    <!-- Tab Switcher for Admin / User / Register -->
+    <div class="glassmorphic-layer rounded-full p-1 flex mb-6 border border-white/5">
+        <button type="button" id="tab-user" onclick="switchLoginTab('user')" class="flex-1 py-2 rounded-xl font-label-bold text-label-bold text-center transition-all bg-primary/20 text-primary ring-1 ring-primary/30">
+            User
+        </button>
+        <button type="button" id="tab-admin" onclick="switchLoginTab('admin')" class="flex-1 py-2 rounded-xl font-label-bold text-label-bold text-center transition-all text-gray-400 hover:text-white">
+            Admin
+        </button>
+        <a href="{{ url_for('auth.register') }}" class="flex-1 py-2 rounded-xl font-label-bold text-label-bold text-center transition-all text-gray-400 hover:text-white flex items-center justify-center hover:bg-white/5">
+            Register
+        </a>
+    </div>
+
+    <!-- Form -->
+    <form action="{{ url_for('auth.login', next=request.args.get('next')) }}" method="POST" class="space-y-5">
+        <input type="hidden" id="login-role" name="role" value="user">
+
+        <!-- Email Address -->
+        <div class="space-y-2">
+            <label for="email" class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">Email Address</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                    <span class="material-symbols-outlined text-lg">mail</span>
+                </span>
+                <input type="email" id="email" name="email" required placeholder="name@domain.com"
+                    class="w-full pl-11 pr-4 py-3.5 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-transparent">
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-2">
+            <label for="password" class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">Password</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                    <span class="material-symbols-outlined text-lg">lock</span>
+                </span>
+                <input type="password" id="password" name="password" required placeholder="••••••••"
+                    class="w-full pl-11 pr-4 py-3.5 neumorphic-inset rounded-xl text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 transition-all font-body-md text-body-md bg-transparent">
+            </div>
+        </div>
+
+        <!-- Remember Me Checkbox -->
+        <div class="flex items-center">
+            <input type="checkbox" id="remember" name="remember" class="w-4 h-4 text-primary bg-black/40 border-white/10 rounded focus:ring-primary/50">
+            <label for="remember" class="ml-2.5 text-sm text-gray-400 font-medium select-none cursor-pointer">Remember this device</label>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" class="glass-button-primary btn-shimmer text-white font-label-bold text-label-bold py-3.5 rounded-xl w-full hover:scale-105 active:scale-95 transition-all shadow-lg flex justify-center items-center gap-2">
+            LOG IN
+        </button>
+    </form>
+
+    <!-- Footer link -->
+    <div class="text-center text-xs text-gray-500 border-t border-white/10 pt-4 mt-6">
+        Don't have an account? 
+        <a href="{{ url_for('auth.register') }}" class="text-primary hover:underline font-semibold transition-colors">Register here</a>
+    </div>
+</div>
+
+<script>
+    function switchLoginTab(role) {
+        document.getElementById('login-role').value = role;
+        const userBtn = document.getElementById('tab-user');
+        const adminBtn = document.getElementById('tab-admin');
+        
+        // Clear input values on role switch
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        
+        if (role === 'user') {
+            userBtn.className = "flex-1 py-2 rounded-xl font-label-bold text-label-bold text-center transition-all bg-primary/20 text-primary ring-1 ring-primary/30";
+            adminBtn.className = "flex-1 py-2 rounded-xl font-label-bold text-label-bold text-center transition-all text-gray-400 hover:text-white";
+        } else {
+            adminBtn.className = "flex-1 py-2 rounded-xl font-label-bold text-label-bold text-center transition-all bg-primary/20 text-primary ring-1 ring-primary/30";
+            userBtn.className = "flex-1 py-2 rounded-xl font-label-bold text-label-bold text-center transition-all text-gray-400 hover:text-white";
+        }
+    }
+</script>
+{% endblock %}

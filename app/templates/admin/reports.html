@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-white/10 pb-5 gap-4">
+        <div>
+            <h1 class="text-headline-lg font-headline-lg text-white">Reports & Analytics</h1>
+            <p class="text-body-md font-body-md text-gray-400 mt-1">Review operational graphics, request trends, and download formatted PDF log files.</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <!-- Generate PDF Button -->
+            <a href="{{ url_for('reports.download_pdf') }}" 
+               class="bg-primary btn-shimmer text-white font-label-bold text-label-bold px-8 py-4 rounded-xl hover-lift shadow-[0_0_20px_rgba(255,23,68,0.3)] flex items-center gap-2 transition-all">
+                <span class="material-symbols-outlined">file_download</span>
+                GENERATE PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- 3 Summary Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <!-- Card 1: Total Donors -->
+        <div class="neu-base rounded-2xl p-6 relative hover-lift h-40 overflow-hidden flex flex-col justify-between border border-white/5">
+            <div class="glass-highlight"></div>
+            <div class="flex justify-between items-start">
+                <p class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest">Total Donors</p>
+                <span class="material-symbols-outlined text-gray-400 text-3xl" style="font-variation-settings: 'FILL' 1;">groups</span>
+            </div>
+            <h3 class="text-display-lg font-display-lg text-white leading-none mb-1">{{ total_donors }}</h3>
+        </div>
+
+        <!-- Card 2: Units Available with Red Glow -->
+        <div class="neu-base rounded-2xl p-6 relative hover-lift h-40 overflow-hidden flex flex-col justify-between border border-white/5">
+            <div class="glass-highlight"></div>
+            <div class="flex justify-between items-start">
+                <p class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest">Units Available</p>
+                <div class="relative">
+                    <div class="absolute inset-0 bg-primary/30 rounded-full filter blur-[10px] pointer-events-none scale-150"></div>
+                    <span class="material-symbols-outlined text-primary text-3xl relative z-10" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+                </div>
+            </div>
+            <h3 class="text-display-lg font-display-lg text-white leading-none mb-1">{{ total_units }}</h3>
+        </div>
+
+        <!-- Card 3: Pending Requests -->
+        <div class="neu-base rounded-2xl p-6 relative hover-lift h-40 overflow-hidden flex flex-col justify-between border border-white/5">
+            <div class="glass-highlight"></div>
+            <div class="flex justify-between items-start">
+                <p class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest">Pending Requests</p>
+                <span class="material-symbols-outlined text-gray-400 text-3xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+            </div>
+            <h3 class="text-display-lg font-display-lg text-white leading-none mb-1">{{ pending_requests }}</h3>
+        </div>
+    </div>
+
+    <!-- 3 Chart Sections, each in neumorphic-base rounded-3xl p-8 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Pie Chart (Blood Group Distribution) -->
+        <div class="neu-base rounded-3xl p-8 relative overflow-hidden border border-white/5 space-y-4">
+            <div class="glass-highlight"></div>
+            <h3 class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">pie_chart</span>
+                Blood Group Distribution
+            </h3>
+            <div class="neumorphic-inset rounded-2xl p-2 h-[350px] flex items-center justify-center">
+                <div id="plotly-pie-chart" class="w-full h-full"></div>
+            </div>
+        </div>
+
+        <!-- Bar Chart (Stock Levels per Group) -->
+        <div class="neu-base rounded-3xl p-8 relative overflow-hidden border border-white/5 space-y-4">
+            <div class="glass-highlight"></div>
+            <h3 class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">bar_chart</span>
+                Stock Levels per Group
+            </h3>
+            <div class="neumorphic-inset rounded-2xl p-2 h-[350px] flex items-center justify-center">
+                <div id="plotly-bar-chart" class="w-full h-full"></div>
+            </div>
+        </div>
+
+        <!-- Line Chart (Monthly Donations/Request Trend) — spanning 2 columns on lg screens -->
+        <div class="lg:col-span-2 neu-base rounded-3xl p-8 relative overflow-hidden border border-white/5 space-y-4">
+            <div class="glass-highlight"></div>
+            <h3 class="text-xs font-label-bold text-label-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">show_chart</span>
+                Monthly Request Trend
+            </h3>
+            <div class="neumorphic-inset rounded-2xl p-2 h-[380px] flex items-center justify-center">
+                <div id="plotly-line-chart" class="w-full h-full"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        loadAnalyticsData();
+    });
+
+    function loadAnalyticsData() {
+        fetch("/reports/api/data")
+            .then(res => res.json())
+            .then(data => {
+                renderPlotlyPieChart(data.donors.labels, data.donors.values);
+                renderPlotlyBarChart(data.stock.labels, data.stock.values);
+                renderPlotlyLineChart(data.trend.labels, data.trend.values);
+            })
+            .catch(err => console.error("Reports API load failed:", err));
+    }
+
+    const defaultLayout = {
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { color: '#ffffff', family: 'Manrope' },
+        colorway: [
+            '#FF1744','#ff4d6d','#d32f2f',
+            '#ff8a80','#b71c1c','#ff6d6d',
+            '#c62828','#e53935'
+        ],
+        margin: { t: 30, b: 30, l: 40, r: 15 }
+    };
+
+    function renderPlotlyPieChart(labels, values) {
+        const trace = {
+            labels: labels,
+            values: values,
+            type: 'pie',
+            hole: 0.4,
+            textinfo: 'percent',
+            textfont: { family: 'Manrope' },
+            marker: {
+                line: { color: '#1e1e1e', width: 1.5 }
+            }
+        };
+
+        const layout = {
+            ...defaultLayout,
+            showlegend: true,
+            legend: { font: { color: '#ffffff', family: 'Manrope' } }
+        };
+
+        Plotly.newPlot('plotly-pie-chart', [trace], layout, {responsive: true, displayModeBar: false});
+    }
+
+    function renderPlotlyBarChart(labels, values) {
+        const trace = {
+            x: labels,
+            y: values,
+            type: 'bar',
+            marker: {
+                line: { color: '#1e1e1e', width: 1.5 }
+            },
+            text: values.map(String),
+            textposition: 'auto',
+            textfont: { family: 'Manrope', color: '#ffffff' }
+        };
+
+        const layout = {
+            ...defaultLayout,
+            xaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.05)',
+                linecolor: 'rgba(255, 255, 255, 0.1)',
+                tickfont: { color: '#ffffff', family: 'Manrope' }
+            },
+            yaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.05)',
+                linecolor: 'rgba(255, 255, 255, 0.1)',
+                zerolinecolor: 'rgba(255, 255, 255, 0.1)',
+                tickfont: { color: '#ffffff', family: 'Manrope' }
+            }
+        };
+
+        Plotly.newPlot('plotly-bar-chart', [trace], layout, {responsive: true, displayModeBar: false});
+    }
+
+    function renderPlotlyLineChart(labels, values) {
+        const trace = {
+            x: labels,
+            y: values,
+            type: 'scatter',
+            mode: 'lines+markers',
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 23, 68, 0.05)',
+            line: { color: '#FF1744', width: 3 },
+            marker: { color: '#FF1744', size: 6 }
+        };
+
+        const layout = {
+            ...defaultLayout,
+            margin: { t: 15, b: 35, l: 45, r: 15 },
+            xaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.05)',
+                linecolor: 'rgba(255, 255, 255, 0.1)',
+                tickfont: { color: '#ffffff', family: 'Manrope' }
+            },
+            yaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.05)',
+                linecolor: 'rgba(255, 255, 255, 0.1)',
+                zerolinecolor: 'rgba(255, 255, 255, 0.1)',
+                tickfont: { color: '#ffffff', family: 'Manrope' }
+            }
+        };
+
+        Plotly.newPlot('plotly-line-chart', [trace], layout, {responsive: true, displayModeBar: false});
+    }
+</script>
+{% endblock %}

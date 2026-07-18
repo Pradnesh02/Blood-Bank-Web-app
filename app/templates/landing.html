@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Saving Lives, One Drop at a Time{% endblock %}
+
+{% block content %}
+<div class="space-y-24">
+    <!-- Hero Section: Flex row on large screens, column on mobile -->
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-12 py-12">
+        <!-- Left Side: Hero Text and Controls -->
+        <div class="w-full lg:w-1/2 space-y-8 text-left">
+            <!-- Badge: glass-panel pill with animated red dot -->
+            <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-panel border-white/15">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                </span>
+                <span class="text-xs font-label-bold text-label-bold text-gray-300 uppercase tracking-widest">Next-Gen Blood Management</span>
+            </div>
+
+            <!-- Headline -->
+            <h1 class="font-display-lg text-display-lg font-bold text-white tracking-tight leading-tight">
+                Saving Lives,<br>
+                <span class="text-primary">One Drop</span> at a Time.
+            </h1>
+
+            <!-- Description -->
+            <p class="font-body-lg text-body-lg text-gray-400 max-w-lg leading-relaxed">
+                An advanced inventory management platform powered by Prophet demand forecasting and RandomForest donor eligibility classifications.
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{{ url_for('user.dashboard') }}" 
+                   class="glass-button-primary btn-shimmer text-white font-label-bold text-label-bold px-8 py-4 rounded-xl text-center hover:scale-105 active:scale-95 transition-all">
+                    User Dashboard
+                </a>
+                <a href="{{ url_for('auth.login') }}" 
+                   class="neu-base text-primary font-label-bold text-label-bold px-8 py-4 rounded-xl text-center hover:scale-105 active:scale-95 transition-all border border-primary/20">
+                    Admin Portal
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Side: Glowing Blood Drop and Floating Chips -->
+        <div class="w-full lg:w-1/2 flex justify-center items-center relative min-h-[350px]">
+            <!-- Ambient glow behind drop -->
+            <div class="absolute w-72 h-72 bg-primary/25 rounded-full filter blur-[60px] pointer-events-none z-0"></div>
+
+            <!-- Blood Drop SVG (highly detailed and glowing) -->
+            <div class="relative z-10 drop-shadow-[0_15px_30px_rgba(255,23,68,0.4)]">
+                <svg class="w-48 h-48 text-primary" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2c-3.333 4.444-6 8.333-6 11a6 6 0 0012 0c0-2.667-2.667-6.556-6-11z"></path>
+                </svg>
+            </div>
+
+            <!-- Top Right Chip: trending_up + Stock Level + Optimal -->
+            <div class="absolute top-4 right-10 z-20 glass-panel rounded-2xl p-4 flex items-center gap-3 animate-bounce shadow-lg border-white/10" style="animation-duration: 2.5s;">
+                <span class="material-symbols-outlined text-green-400 bg-green-500/10 p-2 rounded-xl">trending_up</span>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Stock Level</p>
+                    <p class="text-sm font-black text-white">Optimal</p>
+                </div>
+            </div>
+
+            <!-- Bottom Left Chip: verified_user + Donor Status + Verified -->
+            <div class="absolute bottom-4 left-10 z-20 glass-panel rounded-2xl p-4 flex items-center gap-3 animate-bounce shadow-lg border-white/10" style="animation-duration: 3.5s;">
+                <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-xl">verified_user</span>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Donor Status</p>
+                    <p class="text-sm font-black text-white">Verified</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section (Bento Grid) -->
+    <div class="space-y-6">
+        <h2 class="font-headline-lg text-headline-lg font-bold text-white text-center">System Capabilities</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Card 1 (spans 2 cols): neu-base rounded-[2rem] — AI Forecasting -->
+            <div class="md:col-span-2 neu-base rounded-[2rem] p-8 flex flex-col justify-between space-y-6 relative overflow-hidden">
+                <div class="glass-highlight"></div>
+                <div class="flex items-start justify-between">
+                    <div class="space-y-2">
+                        <h3 class="font-headline-md text-headline-md font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">auto_graph</span>
+                            AI Demand Forecasting
+                        </h3>
+                        <p class="font-body-md text-body-md text-gray-400 max-w-md">
+                            Integrates automated Prophet time-series models to predict blood requests demand over the next 7 days.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Fake Bar Chart at bottom -->
+                <div class="w-full bg-black/30 rounded-2xl p-4 border border-white/5 flex items-end justify-between h-36 gap-2">
+                    <div class="bg-primary/20 hover:bg-primary/40 rounded-t-lg w-full h-[40%] transition-all"></div>
+                    <div class="bg-primary/35 hover:bg-primary/50 rounded-t-lg w-full h-[60%] transition-all"></div>
+                    <div class="bg-primary/50 hover:bg-primary/70 rounded-t-lg w-full h-[85%] transition-all"></div>
+                    <div class="bg-primary/30 hover:bg-primary/45 rounded-t-lg w-full h-[50%] transition-all"></div>
+                    <div class="bg-primary/60 hover:bg-primary/80 rounded-t-lg w-full h-[70%] transition-all"></div>
+                    <div class="bg-primary hover:bg-red-500 rounded-t-lg w-full h-[95%] transition-all shadow-[0_0_15px_rgba(255,23,68,0.4)]"></div>
+                    <div class="bg-primary/40 hover:bg-primary/60 rounded-t-lg w-full h-[55%] transition-all"></div>
+                </div>
+            </div>
+
+            <!-- Card 2 (1 col): glass-panel rounded-[2rem] — Donor Classifications -->
+            <div class="glass-panel rounded-[2rem] p-8 flex flex-col justify-between space-y-6 relative overflow-hidden">
+                <div class="glass-highlight"></div>
+                <div class="space-y-3">
+                    <h3 class="font-headline-md text-headline-md font-bold text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">groups</span>
+                        Eligibility ML
+                    </h3>
+                    <p class="font-body-md text-body-md text-gray-400 leading-relaxed">
+                        Trains local RandomForest classifiers to instantly predict donor health fitness and eligibility.
+                    </p>
+                </div>
+
+                <!-- Two neu-pressed status rows -->
+                <div class="space-y-3">
+                    <div class="neu-pressed rounded-xl p-3.5 flex justify-between items-center border border-white/5">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Classification</span>
+                        <span class="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-0.5 rounded-lg">Fit Donor</span>
+                    </div>
+                    <div class="neu-pressed rounded-xl p-3.5 flex justify-between items-center border border-white/5">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Classifier Confidence</span>
+                        <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">97% Accuracy</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
