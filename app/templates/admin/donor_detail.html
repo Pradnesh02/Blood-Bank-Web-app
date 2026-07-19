@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Donor Details{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center space-x-3 border-b border-white/10 pb-4">
+        <a href="{{ url_for('donors.index') }}" class="text-gray-400 hover:text-white transition-colors">
+            <span class="material-symbols-outlined text-2xl">arrow_back</span>
+        </a>
+        <div>
+            <h2 class="text-2xl font-headline-lg text-white">Donor Details</h2>
+            <p class="text-gray-400 text-xs font-semibold">Detailed registration card and eligibility assessment for {{ donor.name }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Profile Summary (Neumorphic Card) -->
+        <div class="neu-base rounded-2xl p-6 relative col-span-1 border border-white/5 space-y-4">
+            <div class="glass-highlight"></div>
+            <div class="text-center space-y-2">
+                <div class="w-20 h-20 bg-primary/20 text-primary border border-primary/20 rounded-full flex items-center justify-center mx-auto text-4xl font-bold uppercase">
+                    {{ donor.name[:2] }}
+                </div>
+                <h3 class="text-lg font-bold text-white mt-2">{{ donor.name }}</h3>
+                <span class="inline-block bg-primary/20 text-primary font-bold px-3 py-1 rounded-full text-xs">
+                    Blood Group: {{ donor.blood_group }}
+                </span>
+            </div>
+            
+            <div class="border-t border-white/5 pt-4 space-y-3 text-sm text-gray-300">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Age:</span>
+                    <span class="font-semibold text-white">{{ donor.age }} Years</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Weight:</span>
+                    <span class="font-semibold text-white">{{ donor.weight or 'Not Recorded' }} kg</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Phone:</span>
+                    <span class="font-semibold text-white">{{ donor.phone }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Address:</span>
+                    <span class="font-semibold text-white text-right max-w-[150px] truncate" title="{{ donor.address }}">{{ donor.address or 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Health Status:</span>
+                    <span class="font-semibold {% if donor.health_status == 'Fit' %}text-green-400{% else %}text-error{% endif %}">{{ donor.health_status }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eligibility Matrix (Glassmorphic Card) -->
+        <div class="glass-panel rounded-2xl p-6 relative col-span-2 border border-white/5 space-y-6">
+            <div class="glass-highlight"></div>
+            <h3 class="text-headline-md text-white font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">analytics</span>
+                Eligibility Assessment
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Weight Check Pill -->
+                <div class="glassmorphic-layer rounded-xl p-4 border {% if weight_eligible %}border-green-500/30{% else %}border-error/30{% endif %}">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest font-label-bold">Weight Validation</p>
+                    <div class="flex items-center justify-between mt-2">
+                        <p class="text-white font-bold">{{ donor.weight or 'N/A' }} kg</p>
+                        {% if weight_eligible %}
+                        <span class="text-green-400 text-xs font-bold bg-green-500/10 px-2 py-0.5 rounded-md">Pass (>= 50kg)</span>
+                        {% else %}
+                        <span class="text-error text-xs font-bold bg-error/10 px-2 py-0.5 rounded-md">Fail (< 50kg)</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Date Interval Check Pill -->
+                <div class="glassmorphic-layer rounded-xl p-4 border {% if donor.is_date_eligible %}border-green-500/30{% else %}border-yellow-500/30{% endif %}">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest font-label-bold">Safety Interval Check</p>
+                    <div class="flex items-center justify-between mt-2">
+                        <p class="text-white text-xs font-semibold">Last: {{ donor.last_donation_date.strftime('%d %b %Y') if donor.last_donation_date else 'Never' }}</p>
+                        {% if donor.is_date_eligible %}
+                        <span class="text-green-400 text-xs font-bold bg-green-500/10 px-2 py-0.5 rounded-md">Eligible Now</span>
+                        {% else %}
+                        <span class="text-yellow-400 text-xs font-bold bg-yellow-500/10 px-2 py-0.5 rounded-md">Deferred</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Donation Date Highlight Box -->
+            {% if donor.next_donation_date %}
+            <div class="neumorphic-inset rounded-2xl p-6 border border-primary/20 space-y-2 relative">
+                <p class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider text-xs">
+                    Next Eligible Donation Date
+                </p>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <p class="text-3xl text-primary font-bold tracking-tight">
+                        {{ donor.next_donation_date.strftime('%d %B %Y') }}
+                    </p>
+                    {% if not donor.is_date_eligible %}
+                    <span class="bg-yellow-500/10 text-yellow-400 font-bold px-3 py-1 rounded-full text-xs text-center">
+                        ⏳ {{ donor.days_until_eligible }} Days Remaining
+                    </span>
+                    {% else %}
+                    <span class="bg-green-500/10 text-green-400 font-bold px-3 py-1 rounded-full text-xs text-center">
+                        ✅ Ready to Donate
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-gray-500 leading-normal">
+                    *Based on safety regulations requiring at least 6 months of recovery interval between full blood donations.
+                </p>
+            </div>
+            {% else %}
+            <div class="neumorphic-inset rounded-2xl p-6 border border-green-500/20 text-center">
+                <span class="material-symbols-outlined text-green-400 text-3xl mb-1">sentiment_very_satisfied</span>
+                <p class="text-white font-bold text-sm">First-time Donor</p>
+                <p class="text-gray-500 text-xs mt-1">This donor has no previous donation history on file and is eligible to book immediately.</p>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="flex gap-4 pt-4 border-t border-white/5 justify-end">
+                <a href="{{ url_for('donors.edit', id=donor.id) }}"
+                   class="glassmorphic-layer text-white rounded-xl px-6 py-3 text-sm font-label-bold text-label-bold hover-lift border border-white/10 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">edit</span>
+                    Edit Profile
+                </a>
+                {% if fully_eligible %}
+                <a href="{{ url_for('appointments.book') }}"
+                   class="glass-button-primary text-white rounded-xl px-6 py-3 text-sm font-label-bold text-label-bold hover-lift flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,23,68,0.3)]">
+                    <span class="material-symbols-outlined text-sm">event</span>
+                    Book Appointment
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -67,9 +67,25 @@ def add():
         health_status = request.form.get('health_status', 'Fit')
         notes = request.form.get('notes')
         
+        weight_str = request.form.get('weight', '').strip()
+        weight = None
+        if weight_str:
+            try:
+                weight = float(weight_str)
+                if weight <= 0 or weight > 300:
+                    flash('Please enter a valid weight between 1 and 300 kg.', 'danger')
+                    return redirect(url_for('donors.add'))
+            except ValueError:
+                flash('Weight must be a number.', 'danger')
+                return redirect(url_for('donors.add'))
+
+        # Weight eligibility warning (not blocking)
+        if weight and weight < 50:
+            flash(f'⚠️ Donor weight is {weight}kg which is below the 50kg minimum. This donor will be marked as NOT ELIGIBLE for donation.', 'warning')
+        
         try:
             age = int(age_str)
-            last_donation_date = datetime.strptime(last_donation_str, '%Y-%m-%d').date()
+            last_donation_date = datetime.strptime(last_donation_str, '%Y-%m-%d').date() if last_donation_str else None
         except (ValueError, TypeError) as e:
             flash('Invalid form input values. Please review and try again.', 'danger')
             return redirect(url_for('donors.add'))
@@ -80,6 +96,7 @@ def add():
             phone=phone,
             address=address,
             blood_group=blood_group,
+            weight=weight,
             last_donation_date=last_donation_date,
             health_status=health_status,
             notes=notes
@@ -108,9 +125,25 @@ def edit(id):
         donor.health_status = request.form.get('health_status')
         donor.notes = request.form.get('notes')
         
+        weight_str = request.form.get('weight', '').strip()
+        weight = None
+        if weight_str:
+            try:
+                weight = float(weight_str)
+                if weight <= 0 or weight > 300:
+                    flash('Please enter a valid weight between 1 and 300 kg.', 'danger')
+                    return redirect(url_for('donors.edit', id=id))
+            except ValueError:
+                flash('Weight must be a number.', 'danger')
+                return redirect(url_for('donors.edit', id=id))
+        
+        donor.weight = weight
+        if weight and weight < 50:
+            flash(f'⚠️ Donor weight is {weight}kg which is below the 50kg minimum. This donor will be marked as NOT ELIGIBLE for donation.', 'warning')
+        
         try:
             donor.age = int(age_str)
-            donor.last_donation_date = datetime.strptime(last_donation_str, '%Y-%m-%d').date()
+            donor.last_donation_date = datetime.strptime(last_donation_str, '%Y-%m-%d').date() if last_donation_str else None
         except (ValueError, TypeError) as e:
             flash('Invalid age or donation date format.', 'danger')
             return redirect(url_for('donors.edit', id=id))
@@ -131,3 +164,21 @@ def delete(id):
     db.session.commit()
     flash('Donor deleted successfully.', 'success')
     return redirect(url_for('donors.index'))
+
+@donors_bp.route('/<int:id>')
+def detail(id):
+    donor = Donor.query.get_or_404(id)
+
+    # These are computed properties on the model
+    next_date = donor.next_donation_date
+    days_remaining = donor.days_until_eligible
+    weight_eligible = donor.is_weight_eligible
+    fully_eligible = donor.is_fully_eligible
+
+    return render_template(
+        'admin/donor_detail.html',
+        donor=donor,
+        next_date=next_date,
+        days_remaining=days_remaining,
+        weight_eligible=weight_eligible,
+        fully_eligible=fully_eligible)

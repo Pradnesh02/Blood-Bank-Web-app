@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Add Campaign{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="text-center space-y-2">
+        <h1 class="text-headline-lg font-headline-lg text-white">Create Blood Donation Campaign</h1>
+        <p class="text-body-md font-body-md text-gray-400">Post details of an upcoming blood drive to the notice board</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="glass-panel rounded-3xl p-8 relative overflow-hidden">
+        <div class="glass-highlight"></div>
+        <div class="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <form method="POST" action="{{ url_for('campaigns.add') }}" class="space-y-6">
+            <!-- Title -->
+            <div class="space-y-2">
+                <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                    Campaign Title <span class="text-primary">*</span>
+                </label>
+                <input type="text" name="title" required placeholder="e.g. Annual Summer Donation Drive"
+                       class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+            </div>
+
+            <!-- Location & Address Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        City / Location <span class="text-primary">*</span>
+                    </label>
+                    <input type="text" name="location" required placeholder="e.g. City Hall Plaza"
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        Full Address / Venue
+                    </label>
+                    <input type="text" name="address" placeholder="e.g. 100 Main Street, Suite 400"
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+            </div>
+
+            <!-- Date & Time Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        Date <span class="text-primary">*</span>
+                    </label>
+                    <input type="date" name="campaign_date" id="campaign-date" required
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        Time Slot / Hours
+                    </label>
+                    <input type="text" name="campaign_time" placeholder="e.g. 9:00 AM - 4:00 PM"
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-2">
+                <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                    Campaign Description
+                </label>
+                <textarea name="description" rows="3" placeholder="Provide details about the event, parking instructions, or guidelines for donors..."
+                          class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background"></textarea>
+            </div>
+
+            <!-- Target Blood Groups & Expected Donors Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        Target Blood Groups (comma separated)
+                    </label>
+                    <input type="text" name="target_blood_groups" placeholder="e.g. O-, A+, B+"
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        Donor Target count
+                    </label>
+                    <input type="number" name="target_donors" min="5" placeholder="e.g. 50"
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+            </div>
+
+            <!-- Organizer Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        Organizer Name
+                    </label>
+                    <input type="text" name="organizer_name" placeholder="e.g. Sarah Connor"
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                        Organizer Phone
+                    </label>
+                    <input type="text" name="organizer_phone" placeholder="e.g. 55502010"
+                           class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end gap-4 pt-4 border-t border-white/10">
+                <a href="{{ url_for('campaigns.list_all') }}"
+                   class="glassmorphic-layer text-white font-label-bold text-label-bold px-6 py-3 rounded-xl hover-lift border border-white/10">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="glass-button-primary text-white font-label-bold text-label-bold px-8 py-3 rounded-xl hover:scale-105 active:scale-95 transition-all">
+                    Publish Campaign
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set minimum campaign date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('campaign-date').min = tomorrow.toISOString().split('T')[0];
+</script>
+{% endblock %}

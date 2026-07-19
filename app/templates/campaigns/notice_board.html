@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Donation Campaigns{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-white/10 pb-5 gap-4">
+        <div>
+            <h1 class="text-headline-lg font-headline-lg text-white">Blood Donation Campaigns</h1>
+            <p class="text-body-md font-body-md text-gray-400 mt-1">Find and participate in upcoming blood donation drives near you.</p>
+        </div>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+        <div class="mt-4 md:mt-0">
+            <a href="{{ url_for('campaigns.add') }}" 
+               class="bg-primary btn-shimmer text-white rounded-xl px-6 py-3 font-label-bold text-label-bold hover-lift shadow-[0_0_20px_rgba(255,23,68,0.3)] inline-flex items-center gap-2 transition-all">
+                <span class="material-symbols-outlined">add</span>
+                ADD NEW CAMPAIGN
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- NEXT CAMPAIGN HERO BANNER -->
+    {% if next_campaign %}
+    <div class="neu-base rounded-3xl p-8 relative overflow-hidden border border-primary/20 mb-8">
+        <div class="glass-highlight rounded-t-3xl"></div>
+
+        <!-- Animated red glow blob behind -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- NEXT badge -->
+        <div class="inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full font-label-bold text-xs border border-primary/30 mb-4 uppercase tracking-wider">
+            <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            NEXT CAMPAIGN
+        </div>
+
+        <h2 class="font-display-lg text-3xl md:text-5xl text-white font-bold mb-2">
+            {{ next_campaign.title }}
+        </h2>
+
+        <!-- THE LOCATION HIGHLIGHT — BIG AND BOLD -->
+        <div class="flex items-center gap-3 mt-4 mb-6">
+            <span class="material-symbols-outlined text-primary text-4xl">location_on</span>
+            <div>
+                <p class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider text-xs">
+                    Location
+                </p>
+                <p class="font-headline-lg text-2xl md:text-4xl text-white font-bold">
+                    {{ next_campaign.location }}
+                </p>
+                {% if next_campaign.address %}
+                <p class="font-body-md text-body-md text-gray-400 mt-1">
+                    {{ next_campaign.address }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Date + Time row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div class="glassmorphic-layer rounded-xl p-4">
+                <p class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider text-xs mb-1">
+                    Date
+                </p>
+                <p class="font-headline-md text-white">
+                    {{ next_campaign.campaign_date.strftime('%d %B %Y') }}
+                </p>
+            </div>
+
+            <div class="glassmorphic-layer rounded-xl p-4">
+                <p class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider text-xs mb-1">
+                    Time
+                </p>
+                <p class="font-headline-md text-white">
+                    {{ next_campaign.campaign_time or '9AM - 5PM' }}
+                </p>
+            </div>
+
+            <!-- COUNTDOWN BOX -->
+            <div class="glassmorphic-layer rounded-xl p-4 border border-primary/20">
+                <p class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider text-xs mb-1">
+                    Days Away
+                </p>
+                <p class="font-display-lg text-primary text-4xl font-bold" id="days-countdown">
+                    {{ (next_campaign.campaign_date - today).days }}
+                </p>
+                <p class="text-xs text-gray-400">days from today</p>
+            </div>
+        </div>
+
+        <!-- Target blood groups needed -->
+        {% if next_campaign.target_blood_groups %}
+        <div class="mt-6">
+            <p class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider text-xs mb-2">
+                Target Blood Groups Needed
+            </p>
+            <div class="flex gap-2 flex-wrap">
+                {% for group in next_campaign.target_blood_groups.split(',') %}
+                <span class="bg-primary/20 text-primary font-bold px-4 py-2 rounded-full border border-primary/30 text-sm">
+                    {{ group.strip() }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Description -->
+        {% if next_campaign.description %}
+        <p class="font-body-md text-gray-300 mt-6 max-w-2xl bg-black/20 p-4 rounded-xl">
+            {{ next_campaign.description }}
+        </p>
+        {% endif %}
+
+        <!-- Contact + Book button -->
+        <div class="flex flex-col sm:flex-row gap-4 mt-6">
+            <a href="{{ url_for('appointments.book') }}"
+               class="glass-button-primary text-white font-label-bold text-label-bold px-8 py-4 rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined">event</span>
+                BOOK MY DONATION SLOT
+            </a>
+            {% if next_campaign.organizer_phone %}
+            <a href="tel:{{ next_campaign.organizer_phone }}"
+               class="glassmorphic-layer text-white font-label-bold text-label-bold px-8 py-4 rounded-xl hover-lift flex items-center gap-2">
+                <span class="material-symbols-outlined">call</span>
+                CALL ORGANIZER ({{ next_campaign.organizer_name or 'Staff' }})
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Campaigns List -->
+    <div class="space-y-6">
+        <h3 class="font-headline-md text-headline-md text-white">All Upcoming Campaigns</h3>
+        {% if upcoming %}
+            <div class="space-y-4">
+                {% for campaign in upcoming %}
+                <div class="glass-panel rounded-2xl p-6 hover-lift flex flex-col md:flex-row gap-6 items-start md:items-center relative" id="campaign-card-{{ campaign.id }}">
+                    <div class="glass-highlight"></div>
+                    
+                    <!-- Date Column -->
+                    <div class="glassmorphic-layer rounded-xl p-4 text-center min-w-[100px] border border-white/5 shadow-inner">
+                        <p class="text-3xl font-bold text-primary">
+                            {{ campaign.campaign_date.strftime('%d') }}
+                        </p>
+                        <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">
+                            {{ campaign.campaign_date.strftime('%b %Y') }}
+                        </p>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="flex-1 space-y-2">
+                        <h4 class="font-headline-md text-white text-lg font-bold">{{ campaign.title }}</h4>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                            <p class="font-body-md text-gray-300 font-semibold">{{ campaign.location }}</p>
+                        </div>
+                        {% if campaign.description %}
+                        <p class="font-body-md text-body-md text-gray-400 text-sm leading-relaxed max-w-2xl">
+                            {{ campaign.description }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="flex flex-col gap-2 w-full md:w-auto items-stretch md:items-end">
+                        <a href="{{ url_for('appointments.book') }}"
+                           class="glassmorphic-layer text-primary font-label-bold text-label-bold px-6 py-3 rounded-xl hover-lift border border-primary/20 flex items-center justify-center gap-2 whitespace-nowrap text-sm">
+                            <span class="material-symbols-outlined text-sm">volunteer_activism</span>
+                            DONATE HERE
+                        </a>
+                        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                        <button onclick="deleteCampaign({{ campaign.id }})"
+                                class="bg-error/10 text-error border border-error/20 hover:bg-error/20 text-xs px-4 py-2 rounded-lg transition-all hover-lift">
+                            Remove
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="neu-base rounded-2xl p-12 text-center text-gray-500 font-bold border border-white/5 relative">
+                <div class="glass-highlight"></div>
+                <span class="material-symbols-outlined text-gray-600 text-5xl mb-2">event_busy</span>
+                <p>No upcoming campaigns scheduled at this time.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Past Campaigns Section -->
+    {% if past %}
+    <div class="space-y-6 pt-6 border-t border-white/10">
+        <h3 class="font-headline-md text-headline-md text-gray-400">Past Campaigns</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for campaign in past %}
+            <div class="glass-panel rounded-xl p-4 opacity-60 hover:opacity-100 transition-all border border-white/5 relative">
+                <div class="glass-highlight"></div>
+                <div class="flex justify-between items-start gap-4">
+                    <div>
+                        <h4 class="font-bold text-white text-base">{{ campaign.title }}</h4>
+                        <p class="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">location_on</span>
+                            {{ campaign.location }}
+                        </p>
+                    </div>
+                    <span class="bg-white/5 text-gray-400 text-xs px-2.5 py-1 rounded-md">
+                        {{ campaign.campaign_date.strftime('%d %b %Y') }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function deleteCampaign(id) {
+        if (!confirm('Are you sure you want to remove this campaign? It will be hidden from the notice board.')) return;
+
+        try {
+            const res = await fetch(`/campaigns/${id}/delete`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Failed to remove campaign.');
+        }
+    }
+</script>
+{% endblock %}

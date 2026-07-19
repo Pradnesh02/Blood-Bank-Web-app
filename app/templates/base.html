@@ -252,6 +252,14 @@
                    class="{% if request.endpoint in ['donors.index', 'donors.add', 'donors.edit'] %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
                     Donors
                 </a>
+                <a href="{{ url_for('appointments.list_all') }}" 
+                   class="{% if request.endpoint in ['appointments.list_all', 'appointments.book'] %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
+                    Appointments
+                </a>
+                <a href="{{ url_for('campaigns.list_all') }}" 
+                   class="{% if request.endpoint in ['campaigns.list_all', 'campaigns.add'] %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
+                    Campaigns
+                </a>
                 <a href="{{ url_for('stock.index') }}" 
                    class="{% if request.endpoint == 'stock.index' %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
                     Stock
@@ -270,6 +278,14 @@
                    class="{% if request.endpoint == 'user.dashboard' %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
                     Dashboard
                 </a>
+                <a href="{{ url_for('appointments.book') }}" 
+                   class="{% if request.endpoint == 'appointments.book' %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
+                    Book Slot
+                </a>
+                <a href="{{ url_for('campaigns.list_all') }}" 
+                   class="{% if request.endpoint == 'campaigns.list_all' %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
+                    Campaigns
+                </a>
                 <a href="{{ url_for('user.request_blood') }}" 
                    class="{% if request.endpoint == 'user.request_blood' %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
                     Request Blood
@@ -279,6 +295,13 @@
                     My Requests
                 </a>
             {% endif %}
+        </div>
+        {% else %}
+        <div class="hidden md:flex gap-2 items-center bg-white/5 rounded-full p-1 backdrop-blur-sm border border-white/10">
+            <a href="{{ url_for('campaigns.list_all') }}" 
+               class="{% if request.endpoint == 'campaigns.list_all' %}bg-primary/20 text-primary ring-1 ring-primary/30 shadow-inner{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} rounded-xl px-4 py-2 font-label-bold text-label-bold flex items-center gap-2 hover:scale-105 transition-all">
+                Campaigns Notice Board
+            </a>
         </div>
         {% endif %}
 
@@ -311,14 +334,20 @@
             {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('admin.dashboard') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Dashboard</a>
                 <a href="{{ url_for('donors.index') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Donors</a>
+                <a href="{{ url_for('appointments.list_all') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Appointments</a>
+                <a href="{{ url_for('campaigns.list_all') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Campaigns Notice Board</a>
                 <a href="{{ url_for('stock.index') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Stock</a>
                 <a href="{{ url_for('requests.admin_requests') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Requests</a>
                 <a href="{{ url_for('reports.index') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Reports</a>
             {% else %}
                 <a href="{{ url_for('user.dashboard') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Dashboard</a>
+                <a href="{{ url_for('appointments.book') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Book Slot</a>
+                <a href="{{ url_for('campaigns.list_all') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Campaigns Notice Board</a>
                 <a href="{{ url_for('user.request_blood') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Request Blood</a>
                 <a href="{{ url_for('requests.user_requests') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">My Requests</a>
             {% endif %}
+        {% else %}
+            <a href="{{ url_for('campaigns.list_all') }}" class="text-gray-300 hover:text-white py-2 text-label-bold font-label-bold">Campaigns Notice Board</a>
         {% endif %}
     </div>
 

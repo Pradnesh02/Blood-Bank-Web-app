@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}BloodBank - Book Appointment{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="text-center space-y-2">
+        <h1 class="text-headline-lg font-headline-lg text-white">Book Donation Appointment</h1>
+        <p class="text-body-md font-body-md text-gray-400">Schedule your next life-saving blood donation visit</p>
+    </div>
+
+    <!-- Booking Form Card -->
+    <div class="glass-panel rounded-3xl p-8 relative overflow-hidden">
+        <div class="glass-highlight"></div>
+        <!-- Glowing blob -->
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <form method="POST" action="{{ url_for('appointments.book') }}" class="space-y-6">
+            <!-- Section 1: Select Donor -->
+            <div class="space-y-2">
+                <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                    Select Donor
+                </label>
+                <select id="donor-select" name="donor_id"
+                        class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background"
+                        onchange="checkEligibility(this.value)">
+                    <option value="" class="bg-surface">-- Choose a registered donor --</option>
+                    {% for donor in donors %}
+                    <option value="{{ donor.id }}" class="bg-surface">
+                        {{ donor.name }} — {{ donor.blood_group }}
+                        {% if donor.weight %}({{ donor.weight }}kg){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Eligibility Status Card (dynamically populated) -->
+            <div id="eligibility-card" class="hidden">
+                <!-- ELIGIBLE state -->
+                <div id="eligible-state" class="glassmorphic-layer rounded-2xl p-4 border border-green-500/30 hidden">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-green-400">check_circle</span>
+                        <div>
+                            <p class="font-label-bold text-label-bold text-green-400">
+                                ELIGIBLE TO DONATE
+                            </p>
+                            <p class="font-body-md text-body-md text-gray-300" id="eligible-detail"></p>
+                        </div>
+                    </div>
+                    <!-- Weight badge -->
+                    <div class="mt-3 flex gap-3 flex-wrap">
+                        <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full font-label-bold text-xs" id="weight-badge">
+                            ⚖️ Weight: OK
+                        </span>
+                        <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full font-label-bold text-xs" id="date-badge">
+                            📅 Date: Eligible
+                        </span>
+                    </div>
+                </div>
+
+                <!-- NOT ELIGIBLE state -->
+                <div id="ineligible-state" class="glassmorphic-layer rounded-2xl p-4 border border-red-500/30 hidden">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-error">cancel</span>
+                        <div>
+                            <p class="font-label-bold text-label-bold text-error">
+                                NOT ELIGIBLE TO DONATE
+                            </p>
+                        </div>
+                    </div>
+                    <ul id="ineligible-reasons" class="mt-3 space-y-2 list-none"></ul>
+
+                    <!-- Next donation date highlight box -->
+                    <div id="next-date-box" class="mt-4 neumorphic-inset rounded-xl p-4 border border-primary/20 hidden">
+                        <p class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider text-xs mb-1">
+                            Next Eligible Donation Date
+                        </p>
+                        <p class="font-display-lg text-3xl text-primary font-bold" id="next-donation-date"></p>
+                        <p class="font-body-md text-body-md text-gray-400 mt-1" id="days-remaining-text"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Appointment Date -->
+            <div class="space-y-2">
+                <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                    Appointment Date
+                </label>
+                <input type="date" name="appointment_date" id="appointment-date"
+                       class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background"
+                       onchange="loadSlots(this.value)">
+            </div>
+
+            <!-- Section 3: Time Slot Selection -->
+            <div id="slots-container" class="hidden space-y-2">
+                <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                    Select Time Slot
+                </label>
+                <div id="slots-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                    <!-- Slots rendered by JS -->
+                </div>
+                <input type="hidden" name="slot" id="selected-slot">
+            </div>
+
+            <!-- Section 4: Notes -->
+            <div class="space-y-2">
+                <label class="font-label-bold text-label-bold text-gray-400 uppercase tracking-wider block">
+                    Special Notes
+                </label>
+                <textarea name="notes" rows="3" placeholder="Any special notes or medical conditions to mention..."
+                          class="neumorphic-inset rounded-xl px-4 py-3 w-full text-white placeholder-gray-500 border-none outline-none focus:ring-2 focus:ring-primary/50 bg-background"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submit-btn"
+                    class="glass-button-primary text-white font-label-bold text-label-bold px-8 py-4 rounded-xl w-full hover:scale-[1.02] active:scale-95 transition-all mt-6 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">event</span>
+                CONFIRM APPOINTMENT
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set minimum appointment date to today
+    document.getElementById('appointment-date').min = new Date().toISOString().split('T')[0];
+
+    // Check eligibility when donor is selected
+    async function checkEligibility(donorId) {
+        if (!donorId) {
+            document.getElementById('eligibility-card').classList.add('hidden');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/appointments/api/check-eligibility?donor_id=${donorId}`);
+            const data = await res.json();
+
+            const card = document.getElementById('eligibility-card');
+            const eligibleState = document.getElementById('eligible-state');
+            const ineligibleState = document.getElementById('ineligible-state');
+            const nextDateBox = document.getElementById('next-date-box');
+
+            card.classList.remove('hidden');
+
+            if (data.eligible) {
+                eligibleState.classList.remove('hidden');
+                ineligibleState.classList.add('hidden');
+
+                document.getElementById('eligible-detail').textContent = 
+                    `${data.donor_name} (${data.blood_group}) — Weight: ${data.weight ? data.weight + 'kg' : 'N/A'}`;
+
+                document.getElementById('weight-badge').textContent = `⚖️ Weight: ${data.weight ? data.weight + 'kg ✓' : 'Not Recorded'}`;
+                
+                if (data.last_donation) {
+                    document.getElementById('date-badge').textContent = `📅 Last donated: ${formatDate(data.last_donation)}`;
+                } else {
+                    document.getElementById('date-badge').textContent = `📅 First-time donor`;
+                }
+            } else {
+                eligibleState.classList.add('hidden');
+                ineligibleState.classList.remove('hidden');
+
+                // Populate issues list
+                const ul = document.getElementById('ineligible-reasons');
+                ul.innerHTML = data.issues.map(issue => 
+                    `<li class="flex items-start gap-2 text-red-400">
+                        <span class="material-symbols-outlined text-sm mt-0.5">error</span>
+                        <span class="font-body-md text-gray-300 text-sm">${issue}</span>
+                    </li>`
+                ).join('');
+
+                // Show next donation date if available
+                if (data.next_donation_date) {
+                    nextDateBox.classList.remove('hidden');
+                    document.getElementById('next-donation-date').textContent = formatDate(data.next_donation_date);
+                    document.getElementById('days-remaining-text').textContent = 
+                        `${data.days_until_eligible} days from today`;
+                } else {
+                    nextDateBox.classList.add('hidden');
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Load available slots for selected date
+    async function loadSlots(dateStr) {
+        if (!dateStr) return;
+
+        try {
+            const res = await fetch(`/appointments/api/slots?date=${dateStr}`);
+            const data = await res.json();
+
+            const container = document.getElementById('slots-container');
+            const grid = document.getElementById('slots-grid');
+            container.classList.remove('hidden');
+
+            grid.innerHTML = data.slots.map(s => {
+                const label = s.slot.split(' ')[0];
+                const hours = s.slot.match(/\(.*\)/)?.[0] || '';
+                return `
+                    <div onclick="${s.is_full ? '' : `selectSlot('${s.slot}', this)`}"
+                         class="slot-card neu-base rounded-xl p-4 cursor-pointer hover-lift border border-white/10 transition-all ${s.is_full ? 'opacity-40 cursor-not-allowed' : ''}"
+                         data-slot="${s.slot}">
+                        <p class="font-headline-md text-white text-base">${label}</p>
+                        <p class="text-xs text-gray-400">${hours}</p>
+                        <p class="text-xs mt-2 ${s.is_full ? 'text-red-400 font-bold' : 'text-green-400'}">
+                            ${s.is_full ? 'FULL' : `${s.available} slots left`}
+                        </p>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function selectSlot(slot, el) {
+        document.querySelectorAll('.slot-card').forEach(c => {
+            c.classList.remove('border-primary', 'ring-2', 'ring-primary/30');
+        });
+        el.classList.add('border-primary', 'ring-2', 'ring-primary/30');
+        document.getElementById('selected-slot').value = slot;
+    }
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-IN', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+    }
+</script>
+{% endblock %}

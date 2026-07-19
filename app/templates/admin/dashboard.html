@@ -137,6 +137,34 @@
         </div>
     </div>
 
+    <!-- Campaign Notice Widget -->
+    <section class="neu-base rounded-3xl p-6 relative overflow-hidden mb-8" id="campaign-widget">
+      <div class="glass-highlight rounded-t-3xl"></div>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-headline-md text-headline-md text-white flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary bg-primary/20 p-2 rounded-lg border border-primary/20">
+            campaign
+          </span>
+          Next Blood Donation Campaign
+        </h3>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('campaigns.add') }}"
+           class="glassmorphic-layer text-primary font-label-bold text-label-bold px-4 py-2 rounded-xl hover-lift border border-primary/20 flex items-center gap-2 text-sm">
+          <span class="material-symbols-outlined text-sm">
+            add
+          </span>
+          ADD CAMPAIGN
+        </a>
+        {% endif %}
+      </div>
+
+      <div id="campaign-content">
+        <div class="animate-pulse text-gray-400 text-center py-8">
+          Loading campaign info...
+        </div>
+      </div>
+    </section>
+
     <!-- Blood Stock Overview -->
     <div class="space-y-4">
         <div>
@@ -534,5 +562,62 @@
         })
         .catch(err => console.error(err));
     }
+
+    // Fetch Next Campaign for Dashboard Widget
+    fetch('/campaigns/api/next')
+      .then(r => r.json())
+      .then(data => {
+        const el = document.getElementById('campaign-content');
+        if (!el) return;
+        if (!data.campaign) {
+          el.innerHTML = `
+            <div class="text-center py-8">
+              <span class="material-symbols-outlined text-gray-600 text-5xl">event_busy</span>
+              <p class="text-gray-400 mt-2">No upcoming campaigns scheduled.</p>
+              {% if current_user.role == 'admin' %}
+              <a href="/campaigns/add" class="text-primary text-sm mt-2 inline-block hover:underline">+ Add a campaign</a>
+              {% endif %}
+            </div>`;
+          return;
+        }
+
+        const c = data.campaign;
+        el.innerHTML = `
+          <div class="flex flex-col md:flex-row gap-6 items-start">
+            <div class="glassmorphic-layer rounded-2xl p-6 text-center min-w-[120px] border border-primary/20">
+              <p class="text-5xl font-bold text-primary">${c.date.split(' ')[0]}</p>
+              <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">${c.date.split(' ').slice(1).join(' ')}</p>
+            </div>
+            <div class="flex-1 space-y-2">
+              <h4 class="text-lg font-bold text-white">${c.title}</h4>
+              <p class="text-xs text-gray-400 flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">location_on</span>
+                <strong>${c.location}</strong> ${c.address ? ' — ' + c.address : ''}
+              </p>
+              <p class="text-xs text-gray-400 flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">schedule</span>
+                Hours: ${c.time || '9AM - 5PM'}
+              </p>
+              ${c.target_blood_groups ? `
+                <div class="flex gap-2 flex-wrap mt-2">
+                  ${c.target_blood_groups.split(',').map(g => `
+                    <span class="bg-primary/20 text-primary font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-primary/30">
+                      ${g.trim()}
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+            <div class="text-right flex flex-col items-end justify-between min-h-[100px] w-full md:w-auto">
+              <span class="bg-primary/20 text-primary font-bold px-3 py-1 rounded-full text-xs animate-pulse">
+                ${c.days_away} Days Away
+              </span>
+              <a href="/appointments/book" class="glass-button-primary text-white text-xs font-bold px-4 py-2.5 rounded-lg hover-lift mt-3 inline-block">
+                Book My Slot
+              </a>
+            </div>
+          </div>`;
+      })
+      .catch(err => console.error('Error fetching campaign widget:', err));
 </script>
 {% endblock %}
