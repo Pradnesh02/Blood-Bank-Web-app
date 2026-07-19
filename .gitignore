@@ -10,4 +10,4 @@ env/
 dist/
 build/
 .DS_Store
-migrations/versions/*.py
+Upload database migration scripts
